@@ -1,27 +1,30 @@
 # Agent Skills 详尽使用与开发指南 🚀
 
-本仓库是关于 **AI Agent Skills（智能体技能）** 的详细说明与使用指南，旨在帮助开发者深入理解 Skills 的概念、获取与安装方式、核心工作机制，以及在 CLI、IDE（如 Claude Codex、Cursor）和自主 Agent 中的具体实践。
+> **English summary**: A comprehensive Chinese-language guide covering the Agent Skills open standard — what it is, how to install and develop skills, and how to use them across CLI, IDE, and autonomous agent environments.
+
+本仓库是关于 **AI Agent Skills（智能体技能）** 的详细说明与使用指南，旨在帮助开发者深入理解 Skills 的概念、获取与安装方式、核心工作机制，以及在 CLI、IDE（如 Claude Code、Cursor）和自主 Agent 中的具体实践。
 
 ---
 
 ## 📖 目录
 1. [什么是 Agent Skills？](#-什么是-agent-skills)
 2. [Skills 与 MCP (Model Context Protocol) 的区别](#-skills-与-mcp-model-context-protocol-的区别)
-3. [如何获取 Skills](#-如何获取-skills)
-4. [如何安装 Skills](#-如何安装-skills)
-5. [如何开发自定义 Skill](#-如何开发自定义-skill)
-6. [如何在各大客户端与 Agent 中使用](#-如何在各大客户端与-agent-中使用)
-7. [典型应用场景](#-典型应用场景)
-8. [社区资源与前沿动态](#-社区资源与前沿动态)
+3. [快速入门](#-快速入门)
+4. [如何获取 Skills](#-如何获取-skills)
+5. [如何安装 Skills](#-如何安装-skills)
+6. [如何开发自定义 Skill](#-如何开发自定义-skill)
+7. [如何在各大客户端与 Agent 中使用](#-如何在各大客户端与-agent-中使用)
+8. [典型应用场景](#-典型应用场景)
+9. [社区资源与前沿动态](#-社区资源与前沿动态)
 
 ---
 
 ## 🧠 什么是 Agent Skills？
 
-在 AI Agent 领域，**Skills** 是由 **[agentskills.io](https://agentskills.io)** 提出的一个开源、跨平台的开放标准。它是一种**模块化、可复用**的指令与执行包，专门用来扩展 AI 智能体的专业能力。
+在 AI Agent 领域，**Skills** 是由 **[agentskills.io](https://agentskills.io)** 提出的一个开源、跨平台的开放标准（由 Anthropic 于 2025 年 12 月正式发布规范）。它是一种**模块化、可复用**的指令与执行包，专门用来扩展 AI 智能体的专业能力。
 
 > [!NOTE]
-> 简而言之，一般的 Prompt 就像是口头吩咐，容易被 AI 遗忘且浪费上下文；而 **Agent Skill** 就像是给 AI 准备的一本**“标准作业程序 (SOP) 手册”**。它不仅包含详细的 Markdown 执行规范，还可以绑定配套的可执行脚本（Scripts）和参考文档（References）。
+> 简而言之，一般的 Prompt 就像是口头吩咐，容易被 AI 遗忘且浪费上下文；而 **Agent Skill** 就像是给 AI 准备的一本**"标准作业程序 (SOP) 手册"**。它不仅包含详细的 Markdown 执行规范，还可以绑定配套的可执行脚本（Scripts）和参考文档（References）。
 
 ### 核心设计哲学：渐进式加载 (Progressive Disclosure)
 为了防止上下文窗口被不相关的指令撑爆（避免 Token 浪费与性能下降），Skills 采用三阶段按需加载：
@@ -38,8 +41,56 @@
 | 维度 | Model Context Protocol (MCP) | Agent Skills |
 | :--- | :--- | :--- |
 | **定位** | **数据与连接通道**（如 USB 接口 / 基础设施） | **业务逻辑与 SOP**（如配方 / 作业规范） |
-| **主要功能** | 提供通用的协议标准，用于将 AI 连接到数据库、API、本地文件系统等外部工具。 | 告诉 AI 应该“如何”去组合这些工具，以特定的步骤和策略完成一项复杂的业务目标。 |
+| **主要功能** | 提供通用的协议标准，用于将 AI 连接到数据库、API、本地文件系统等外部工具。 | 告诉 AI 应该"如何"去组合这些工具，以特定的步骤和策略完成一项复杂的业务目标。 |
 | **例子** | **MCP Tool**: `query_postgres_db` (查询数据库工具) | **Skill**: `database-performance-tuning` (指导 Agent 如何抓取慢查询、分析执行计划、生成索引优化建议的 SOP 流程) |
+
+> [!TIP]
+> Skills 与 MCP 可以组合使用：MCP 提供"能力接口"，Skills 定义"使用策略"。
+
+---
+
+## ⚡ 快速入门
+
+用 3 分钟创建并使用你的第一个 Skill：
+
+**第一步：创建 Skill 文件夹**
+```bash
+mkdir -p .claude/skills/my-first-skill
+```
+
+**第二步：编写 `SKILL.md`**
+```yaml
+---
+name: my-first-skill
+description: 当用户要求检查代码质量或进行代码审查时触发。分析代码风格、潜在 bug 和性能问题。
+license: MIT
+metadata:
+  author: your-name
+  version: 1.0.0
+allowed-tools:
+  - read_file
+---
+
+# 代码质量检查专家
+
+当此技能激活时，请按以下步骤审查代码：
+
+1. 检查命名规范是否一致
+2. 识别潜在的空指针或边界错误
+3. 评估函数复杂度（建议单函数不超过 50 行）
+4. 给出具体的改进建议，附上修改后的代码片段
+```
+
+**第三步：在 Claude Code 中使用**
+```bash
+# 显式调用
+/my-first-skill 帮我检查 src/main.py 的代码质量
+
+# 或直接自然语言（自动触发）
+# "帮我做一下代码审查" → Agent 自动激活该 Skill
+```
+
+更多完整示例请查看 [`examples/`](./examples/) 目录。
 
 ---
 
@@ -47,9 +98,10 @@
 
 目前获取 Agent Skills 主要有以下几种方式：
 
-1. **社区开源仓库**：
+1. **官方与社区开源仓库**：
    - 访问 **[agentskills.io](https://agentskills.io)** 官方平台。
-   - GitHub 上的 Awesome 列表（如搜索 `awesome-claude-skills` 或 `antigravity-awesome-skills`）。
+   - **[anthropics/skills](https://github.com/anthropics/skills)** —— Anthropic 官方维护的 Skills 公共仓库。
+   - GitHub 上的 Awesome 列表（如 **[awesome-claude-skills](https://github.com/travisvn/awesome-claude-skills)**，收录 1000+ 生产级 Skills）。
 2. **企业内部分享**：
    - 团队内部针对特定的项目规范、DevOps 流程开发的专有 Skills 文件夹，放在 Git 仓库中随项目分发。
 3. **利用 AI 自动生成**：
@@ -68,7 +120,7 @@
 
 ### 2. 全局安装 (Global)
 对当前用户的所有项目和终端会话都生效，适合存放个人习惯的通用工具箱。
-*   **Antigravity CLI** 路径：`~/.gemini/antigravity-cli/skills/{skill-name}/` 或 `~/.gemini/config/skills/{skill-name}/`
+*   **Antigravity CLI** 路径：`~/.gemini/antigravity-cli/skills/{skill-name}/`
 *   **Claude Code CLI** 路径：`~/.claude/skills/{skill-name}/`
 
 > [!TIP]
@@ -122,27 +174,56 @@ allowed-tools:
 - 重新运行测试直至全部通过。
 ```
 
+### 2. description 字段：最关键的触发条件
+
+> [!IMPORTANT]
+> **`description` 是给 Agent 读的，不是给人读的。** 它是 Agent 决定是否自动激活该 Skill 的唯一判断依据。
+>
+> **写法原则**：
+> - ✅ 描述**何时触发**（"当用户要求 X 时"、"在进行 Y 操作时"）
+> - ✅ 列出**关键词**（用户可能用到的自然语言表达）
+> - ❌ 不要只写功能描述（"这个 Skill 可以做 X"——太模糊，触发率低）
+>
+> **示例对比**：
+> | 差的写法 ❌ | 好的写法 ✅ |
+> |:---|:---|
+> | `"代码审查工具"` | `"当用户要求代码审查、代码 review、检查代码质量、找 bug 时触发"` |
+> | `"Flutter 测试"` | `"在用户要求运行测试、修复测试报错、提高测试覆盖率时触发"` |
+
+### 3. 其他字段说明
+
 > [!IMPORTANT]
 > - **`name` 限制**：最大 64 字符，只能包含小写字母、数字和连字符 `-`，且文件夹名必须与该属性完全一致。
 > - **`description` 限制**：最大 1024 字符，描述必须极其精准，这是 Agent 判定是否自动加载该 Skill 的唯一依据。
 > - **`allowed-tools` 限制**：声明该 Skill 允许使用的系统工具，确保安全性。
+> - **单一职责原则**：一个 Skill 只做一件事。一个 2000 字涵盖"代码审查+测试+部署+文档"的 Skill，效果远不如四个各 500 字的专项 Skill。
+> - **长度控制**：保持 `SKILL.md` 在 500 行以内。详细参考文档放入 `references/` 目录。
 
 ---
 
 ## 💻 如何在各大客户端与 Agent 中使用
 
+### 兼容平台一览
+
+| 平台 | 支持方式 | Skill 路径 |
+|:---|:---|:---|
+| **Claude Code** (Anthropic) | 原生支持，自动发现 | `.claude/skills/{name}/` |
+| **Codex CLI** (OpenAI) | 原生支持 | `.codex/skills/{name}/` |
+| **Gemini CLI** (Google) | 原生支持 | `.gemini/skills/{name}/` |
+| **GitHub Copilot** (VS Code) | 通过 VS Code Agent Skills 扩展 | `.github/skills/{name}/` |
+| **Cursor** | 手动 `@` 引用或 System Prompt | `.agents/skills/{name}/` |
+| **Cline / Windsurf** | 社区插件支持 | `.agents/skills/{name}/` |
+
 ### 1. 在 CLI 命令行中使用
-这是目前 Skills 最原生、最强大的使用场景（如在 Claude Code CLI 或 Antigravity CLI 中）。
+这是目前 Skills 最原生、最强大的使用场景（如在 Claude Code CLI 中）。
 
 *   **查看已安装技能**：
-    在命令行提示符中输入：
     ```bash
     /skills
     ```
     Agent 将会列出所有当前全局和当前项目下已启用的 Skills 列表。
 
 *   **强制显式调用**：
-    如果你想针对当前任务强制启用某个技能，可以使用斜杠命令：
     ```bash
     /{skill-name} [你的具体需求]
     # 例如：
@@ -158,29 +239,29 @@ allowed-tools:
 
 ---
 
-### 2. 在 Claude Codex / Cursor 等 IDE 客户端中使用
-在图形化 IDE 编辑器中，Skills 提供了更直观的上下文绑定：
+### 2. 在 VS Code / GitHub Copilot 中使用
+VS Code 从 2026 年起通过 **Agent Skills** 扩展原生支持该标准。
 
-*   **Cursor 引用机制**：
-    由于 Cursor 暂未完全原生内置开放的 `/skills` 解析链路，开发者通常通过 **Context Reference** 机制来使用。
-    - 在聊天框或 Composer 中，输入 `@` 并选择 `SKILL.md` 文件（如 `@.agents/skills/code-reviewer/SKILL.md`）。
-    - 也可以直接将技能的说明作为系统 Prompt 的一部分（在 Cursor 的 System Prompt 设置中引用）。
-    
-*   **Claude Codex**：
-    作为 Anthropic 的先进编程环境，Claude Codex 原生支持项目底部的 `.claude/skills/` 规范。
-    - 只要项目根目录包含 `.claude/skills/` 目录，Codex 在扫描工作空间时会自动将这些 Skills 编译进可选项。
-    - 在 Codex 聊天界面，你可以直接输入 `/` 触发命令菜单，选择你自定义的 Skills。
+*   在项目根目录创建 `.github/skills/{skill-name}/SKILL.md`。
+*   在 Copilot Chat 中，使用 `@workspace /skill-name` 触发，或通过自然语言自动激活。
 
 ---
 
-### 3. 在自主 Agent (Autonomous Agents) 中使用
+### 3. 在 Cursor 等 IDE 客户端中使用
+由于 Cursor 暂未完全原生内置开放的 `/skills` 解析链路，开发者通常通过 **Context Reference** 机制来使用。
+- 在聊天框或 Composer 中，输入 `@` 并选择 `SKILL.md` 文件（如 `@.agents/skills/code-reviewer/SKILL.md`）。
+- 也可以直接将技能的说明作为系统 Prompt 的一部分（在 Cursor 的 System Prompt 设置中引用）。
+
+---
+
+### 4. 在自主 Agent (Autonomous Agents) 中使用
 如 OpenHands、PraisonAI 或 LangGraph 构建的 Agent 团队：
 
 *   **多智能体角色分配**：
-    在多智能体框架中，Skills 可以作为“资产”分配给特定的 Agent 节点。例如，你可以定义一个 `security-audit` 技能文件夹，并在代码中初始化：
+    在多智能体框架中，Skills 可以作为"资产"分配给特定的 Agent 节点。例如：
     ```python
     from praisonai import Agent
-    
+
     # 框架将自动读取 SKILL.md 并将其注入该 Agent 的 System Prompt
     security_agent = Agent(
         name="Security Expert",
@@ -193,11 +274,16 @@ allowed-tools:
 ## 🎯 典型应用场景
 
 *   **代码风格规范共建 (Code Guard)**：
-    团队制定的 Java/C/TypeScript 代码规范极其繁杂，新人容易犯错。通过建立 `code-reviewer` 技能，让 Agent 在提提交前自动扫描并修改不符合命名、分层设计的代码。
+    团队制定的 Java/C/TypeScript 代码规范极其繁杂，新人容易犯错。通过建立 `code-reviewer` 技能，让 Agent 在提交前自动扫描并修改不符合命名、分层设计的代码。
+    → 查看示例：[`examples/code-reviewer/`](./examples/code-reviewer/)
+
 *   **复杂环境部署 (Smart Deployer)**：
     部署一个微服务需要运行 5 个不同的 CLI 命令并修改 Kubernetes 配置。创建 `service-deploy` 技能，配合 `scripts/deploy.sh`，让 Agent 代理整个部署与健康检查流程。
+
 *   **单元测试自动化 (Test Guard)**：
     每次修改代码后自动运行测试，读取测试失败日志，自我反思，修复 Bug，直到测试 100% 通过再交付。
+    → 查看示例：[`examples/test-guard/`](./examples/test-guard/)
+
 *   **文档同步更新 (Doc Sync)**：
     在修改任何核心 API 或数据库 Schema 后，自动检测并更新对应的 OpenAPI / Markdown 文档，防止文档过期。
 
@@ -206,5 +292,7 @@ allowed-tools:
 ## 🌐 社区资源与前沿动态
 
 *   **官方网站**: [agentskills.io](https://agentskills.io) —— 获取最新的标准协议规范与官方工具链。
-*   **协议开源库**: [GitHub - agentskills/agentskills](https://github.com/agentskills/agentskills) —— 参与开源标准制定，提交你的通用 Skill。
-*   **Antigravity 官方**: [antigravity.google](https://antigravity.google) —— 查看 Google Agentic 开发工具与 CLI 的最新演进。
+*   **协议开源库**: [agentskills/agentskills](https://github.com/agentskills/agentskills) —— 参与开源标准制定，提交你的通用 Skill。
+*   **Anthropic 官方 Skills 库**: [anthropics/skills](https://github.com/anthropics/skills) —— Anthropic 官方维护的公共 Skills 仓库。
+*   **社区精选列表**: [awesome-claude-skills](https://github.com/travisvn/awesome-claude-skills) —— 1000+ 生产级 Skills 精选。
+*   **VS Code 文档**: [Use Agent Skills in VS Code](https://code.visualstudio.com/docs/agent-customization/agent-skills) —— VS Code 官方集成文档。
